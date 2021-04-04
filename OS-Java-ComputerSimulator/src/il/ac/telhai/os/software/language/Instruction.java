@@ -28,6 +28,21 @@ public class Instruction {
 		this(new AssemblerLine(commandLine, null));		
 	}
 
+	/**
+	 * Use this only if your string is safe (no compile errors)
+	 * @param commandLine
+	 * @return
+	 */
+	public static Instruction create (String commandLine) {
+		try {
+			return new Instruction(commandLine);
+		} catch (ParseException e) {
+			e.printStackTrace();
+			System.exit(1);
+			return null; // To please the compiler
+		}
+	}
+	
 	public void execute (Registers registers, Memory memory) {
 		int result;
 		
@@ -90,7 +105,9 @@ public class Instruction {
 			if (!registers.getFlag(Registers.FLAG_ZERO))  registers.set(Register.IP, result); 
 			break;
 		case PUSH:
-			// TODO: Add stack Overflow here
+			if (registers.get(Register.SP) < RealMemory.BYTES_PER_INT) {
+				throw new StackOverflow();
+			}
 			result = op1.getWord(registers, memory);
 			offset  = registers.get(Register.SP)-RealMemory.BYTES_PER_INT;
 			memory.writeWord(registers.get(Register.SS), offset, result);
@@ -102,7 +119,9 @@ public class Instruction {
 			registers.add(Register.SP, RealMemory.BYTES_PER_INT);
 			break;
 		case CALL:
-			// TODO: Add stack overflow here
+			if (registers.get(Register.SP) < RealMemory.BYTES_PER_INT) {
+				throw new StackOverflow();
+			}
 			result = op1.getWord(registers, memory);
 			offset  = registers.get(Register.SP)-RealMemory.BYTES_PER_INT;
 			memory.writeWord(registers.get(Register.SS), offset, registers.get(Register.IP));

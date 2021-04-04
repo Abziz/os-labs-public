@@ -8,4 +8,5 @@ package il.ac.telhai.os.hardware;
  * System Calls (software interrupts) and Traps (not implemented)
  */
 public interface InterruptSource {
+    int getPriority();
 }

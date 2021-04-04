@@ -9,7 +9,9 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Scanner;
 
-public class Program {
+import il.ac.telhai.os.software.Software;
+
+public class Program implements Software {
 	private String fileName;
 	private int entryPoint;
 	private int stackSize;

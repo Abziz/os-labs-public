@@ -21,6 +21,12 @@ public class RealMemory implements Memory {
 	private byte[][] memory;
 	
 	public RealMemory (int segmentSize, int numberOfSegments) {
+		this.segmentSize = segmentSize;
+		this.numberOfSegments = numberOfSegments;
+		memory = new byte[numberOfSegments][];
+		for (int i =0 ; i < numberOfSegments; i++) {
+			memory[i] = new byte[segmentSize];
+		}
 	}
 	
 	@Override
@@ -43,21 +49,47 @@ public class RealMemory implements Memory {
 	}
 	
 	public void writeByte (int segment, int offset, byte value) {
+		logger.trace("BYTE " + segment + ":" + offset + "=" + value);
+		assert(offset >= 0 && offset < segmentSize);
+		getSegment(segment)[offset] = value;
 	}
 	
 	public int readWord (int segment, int offset) {
+		assert(offset >= 0 && offset <= segmentSize - BYTES_PER_INT);
+		assert(offset % BYTES_PER_INT == 0);
+		byte[] mySegment = getSegment(segment);
+		
+		int result = 0;
+		for (int i=offset; i < offset + BYTES_PER_INT;i++) {
+			result <<= BITS_PER_BYTE;
+		    result += mySegment[i] & 0xff;
+		}
+		return result;
 	}
 	
 	public void writeWord (int segment, int offset, int value) {
+		logger.trace("WORD " + segment + ":" + offset + "=" + value);
+		assert(offset >= 0 && offset <= segmentSize - BYTES_PER_INT);
+		assert(offset % BYTES_PER_INT == 0);
+		byte[] mySegment = getSegment(segment);
+		for (int i = offset + BYTES_PER_INT -1 ; i >= offset; i--) {
+		    mySegment[i] = (byte) (value & 0xff);
+			value >>= BITS_PER_BYTE;
+		}
 	}
 
 	public void dma(int destinationSegment, int sourceSegment, int offset, int length) {
+        byte[] src = getSegment(sourceSegment);
+		byte[] dst = getSegment(destinationSegment);
+		System.arraycopy(src, offset, dst, offset, length);
 	}
 
 	public void dma(int destinationSegment, int sourceSegment) {
+		dma(destinationSegment, sourceSegment, 0, segmentSize);
 	}
 
 	public String dump(int segment) {
+		// TODO: Make it like od
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i< segmentSize; i+=BYTES_PER_INT) {
 			int value = this.readWord(segment, i);
