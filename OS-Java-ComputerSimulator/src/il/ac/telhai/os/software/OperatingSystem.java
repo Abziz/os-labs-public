@@ -38,17 +38,31 @@ public class OperatingSystem implements Software {
 		}
 	}
 		
-	// TODO: Write the Power swithc interrupt handler as a private class
-	
 	private void initialize() {
-		// TODO: Install the interrupt handlers in the CPU's interrupt vector
+		installHandlers();
 		initialized = true;
 	}
 
-    // You can shutdown by using this function
+	private void installHandlers() {
+		for (Peripheral p : peripherals) {
+			if (p instanceof PowerSwitch) {
+				cpu.setInterruptHandler(p.getClass(), new PowerSwitchInterruptHandler());
+			}
+		}
+	}
+
+
 	private void shutdown() {
 		logger.info( "System going for shutdown");
 		cpu.execute(Instruction.create("HALT"));
 	}
+
+	private class PowerSwitchInterruptHandler implements InterruptHandler {
+		@Override
+		public void handle(InterruptSource source) {
+			shutdown();
+		}
+	}
+
 	
 }
