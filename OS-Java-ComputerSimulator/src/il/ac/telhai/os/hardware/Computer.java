@@ -9,15 +9,12 @@ import java.util.Set;
 
 import javax.swing.JFrame;
 
-import org.junit.Test;
-
 /**
  * 
  * @author cmhalom
  * A computer with a CPU, Timer and a Power switch
  * Running the MockOS operating system when powered on
  */
-@SuppressWarnings("serial")
 public class Computer implements Runnable {
 	protected static final int FREQUENCY = 100;
 	protected static final int SEGMENT_SIZE = 4096;
@@ -67,7 +64,7 @@ public class Computer implements Runnable {
 		// This design is not flexible, in the sense that 
 		// we cannot "boot" this computer with another operating system
 		OperatingSystem os = new OperatingSystem (cpu, peripherals);
-		cpu.contextSwitch(os);
+		cpu.contextSwitch(os, null);
 		clock.run();
 		for (int seg = 0; seg < memory.getNumberOfSegments(); seg++) {
 			System.out.print(memory.dump(seg));			

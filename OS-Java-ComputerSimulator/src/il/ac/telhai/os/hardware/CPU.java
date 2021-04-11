@@ -27,12 +27,16 @@ public class CPU implements Clockeable {
 		this.realMemory = realMemory;
 	}
 
+    private boolean halted() {
+    	boolean ret = registers.getFlag(Registers.FLAG_HALTED);
+    	if (ret) clock.shutdown();
+    	return ret;
+    }
+
+	
 	@Override
 	public void tick() {
-		if (registers.getFlag(Registers.FLAG_HALTED)) {
-			clock.shutdown();
-			return;
-		}
+		if (halted()) return;
 		
 		if (pendingInterrupt != null) {
 			InterruptSource source = pendingInterrupt;
@@ -41,6 +45,7 @@ public class CPU implements Clockeable {
 			if (handler != null) {
 				registers.setFlag(Registers.FLAG_USER_MODE, false);
 				handler.handle(source);
+				if (halted()) return;
 			}
 		}
 
@@ -50,11 +55,14 @@ public class CPU implements Clockeable {
 		    if (running instanceof OperatingSystem) { 
 			    ((OperatingSystem) running).step();
 		    } else {
-				Instruction instruction = ((Program)running).fetchLine(registers);
-				instruction.execute(registers, realMemory);
+		    	try {
+				ProgramLine programLine = ((Program)running).fetchLine(registers);
+				programLine.execute(registers, realMemory);
+		    	} catch (SystemCall call) {
+		    		interrupt(call);
+		    	}
 		    }
 		}
-
 	}
 
 	public void execute(Instruction instruction) {
@@ -80,9 +88,9 @@ public class CPU implements Clockeable {
 		pendingInterrupt = source;
 	}
 
-	
-	public void contextSwitch (Software running) {
-		this.running = running;
+	public void contextSwitch (Software software, Registers registers) {
+		running = software;
+		if (registers != null) this.registers = registers;
 	}
 	
 	public String getRegisters() {

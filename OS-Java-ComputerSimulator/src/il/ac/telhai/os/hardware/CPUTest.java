@@ -33,7 +33,7 @@ public class CPUTest {
 	@Test
 	public void testTick() throws IOException, ParseException {
 		Program program = new Program("test.prg");
-		cpu.contextSwitch(program);
+		cpu.contextSwitch(program, null);
 		assertEquals("\nCS=0\tDS=0\tSS=0\tES=0" +
 				     "\nAX=0\tBX=0\tCX=0\tDX=0" + 
 				     "\nSP=0\tIP=0\tSI=0\tDI=0" + 

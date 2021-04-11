@@ -34,21 +34,30 @@ public class OperatingSystem implements Software {
 		if (!initialized) {
 			initialize();
 		} else {
-			logger.info( "Idle, nothing to do....");
+			if (Process.process != null) {
+				Process.process.run(cpu);
+			} else {
+				logger.info( "Idle, nothing to do....");				
+			}
 		}
 	}
 		
 	private void initialize() {
 		installHandlers();
+		Process init = new Process(null);
+		if (!init.exec("init.prg")) {
+			throw new IllegalArgumentException ("Cannot load init");
+		}
 		initialized = true;
-	}
-
+	}	
+	
 	private void installHandlers() {
 		for (Peripheral p : peripherals) {
 			if (p instanceof PowerSwitch) {
 				cpu.setInterruptHandler(p.getClass(), new PowerSwitchInterruptHandler());
 			}
 		}
+		// TODO: Install here the Software Interrupt Handler
 	}
 
 
@@ -64,5 +73,6 @@ public class OperatingSystem implements Software {
 		}
 	}
 
-	
+	// TODO: Write here the Software Interrupt Handler
+
 }

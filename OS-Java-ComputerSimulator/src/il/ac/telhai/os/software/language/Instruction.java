@@ -12,7 +12,7 @@ import org.apache.log4j.Logger;
  * @author cmshalom
  * Every instruction has a mnemonic code, and at most two operands
  */
-public class Instruction {
+public class Instruction implements ProgramLine {
 	private static final Logger logger = Logger.getLogger(Instruction.class);
 	
 	private Mnemonic mnemonicCode;

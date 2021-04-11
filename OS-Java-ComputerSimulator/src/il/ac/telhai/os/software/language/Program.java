@@ -1,5 +1,7 @@
 package il.ac.telhai.os.software.language;
 
+import il.ac.telhai.os.software.Software;
+
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.text.ParseException;
@@ -9,14 +11,12 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Scanner;
 
-import il.ac.telhai.os.software.Software;
-
 public class Program implements Software {
 	private String fileName;
 	private int entryPoint;
 	private int stackSize;
 	private int numberOfDataSegments;
-	private List<Instruction> lines = new ArrayList<Instruction>();
+	private List<ProgramLine> lines = new ArrayList<ProgramLine>();
 
 	public Program(String fileName) throws FileNotFoundException, ParseException {
 		this.fileName = fileName;
@@ -31,6 +31,9 @@ public class Program implements Software {
 					break;
 				case 2:
 					lines.add(new Instruction (line));
+					break;
+				case 3:
+					lines.add(new SystemCall (line));
 					break;
 				default:
 					throw new RuntimeException("Invalid Mnemonic Type for " + line.getMnemonic() + ". Check Mnemonic.java");
@@ -80,13 +83,13 @@ public class Program implements Software {
 			stackSize = symbolTable.get("STACK_SIZE");
 			numberOfDataSegments = symbolTable.get("DATA_SEGMENTS");
 		} catch (Exception e) {
-			throw new RuntimeException("MAIN, STACK_SIZE or DATA_SEGMENTS undefined");
+			throw new RuntimeException("MAIN or STACK_SIZE undefined");
 		}
 		return symbolTable;    	
 	}
 
-	public Instruction fetchLine(Registers r) {
-		Instruction ret;
+	public ProgramLine fetchLine(Registers r) {
+		ProgramLine ret;
 		ret =  lines.get(r.get(Register.IP));
 		r.add(Register.IP, 1);
 		return ret;

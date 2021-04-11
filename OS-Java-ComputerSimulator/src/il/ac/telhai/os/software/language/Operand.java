@@ -17,6 +17,12 @@ public abstract class Operand {
     	String s = operandString.trim().toUpperCase();
     	if (s.length() == 0) return null;
     	
+    	if (s.startsWith("\"")) {
+    		if (! s.endsWith("\"")) throw new ParseException(operandString+": unmatched quotes", 0);
+        	s = s.substring(1, s.length()-1);
+        	return new StringOperand(s);
+    	}
+    	
     	boolean isIndirect = s.startsWith("[");
     	if (isIndirect ) { 
     		if (!s.endsWith("]")) throw new ParseException(operandString+": unmatched brackets", 0);

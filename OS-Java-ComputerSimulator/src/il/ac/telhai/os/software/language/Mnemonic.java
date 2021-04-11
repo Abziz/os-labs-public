@@ -24,9 +24,12 @@ public enum Mnemonic {
 	CALL(2, false, 1),
 	RET(2, false, 0),
 	HALT(2, true, 0), 
-	USR(2, false, 0); // Set user mode 
-		
-	private int type;  // 1-Directive, 2-Instruction
+	USR(2, false, 0), // Set user mode 
+	
+	FORK(3, false, 0),
+	SHUTDOWN(3, false, 0);
+	
+	private int type;  // 1-Directive, 2-Instruction, 3-System Call
 	private boolean privileged;
 	private int params;
 	
