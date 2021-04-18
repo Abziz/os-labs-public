@@ -8,6 +8,7 @@ import il.ac.telhai.os.hardware.InterruptSource;
 import il.ac.telhai.os.hardware.Peripheral;
 import il.ac.telhai.os.hardware.PowerSwitch;
 import il.ac.telhai.os.software.language.Instruction;
+import il.ac.telhai.os.software.language.SystemCall;
 
 public class OperatingSystem implements Software {
 	private static final Logger logger = Logger.getLogger(OperatingSystem.class);
@@ -57,7 +58,7 @@ public class OperatingSystem implements Software {
 				cpu.setInterruptHandler(p.getClass(), new PowerSwitchInterruptHandler());
 			}
 		}
-		// TODO: Install here the Software Interrupt Handler
+		cpu.setInterruptHandler(SystemCall.class, new SystemCallInterruptHandler());
 	}
 
 
@@ -73,6 +74,19 @@ public class OperatingSystem implements Software {
 		}
 	}
 
-	// TODO: Write here the Software Interrupt Handler
+	private class SystemCallInterruptHandler implements InterruptHandler {
+		@Override
+		public void handle(InterruptSource source) {
+			SystemCall call = (SystemCall) source;
+			switch (call.getMnemonicCode()) {
+			case SHUTDOWN:
+				shutdown();
+				break;
+			default:
+				throw new IllegalArgumentException("Unknown System Call:" + call);
+			}
+		}
+	}
 
+	
 }
