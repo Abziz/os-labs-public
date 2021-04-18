@@ -75,6 +75,7 @@ public class OperatingSystem implements Software {
 		@Override
 		public void handle(InterruptSource source) {
 			SystemCall call = (SystemCall) source;
+			logger.trace(call);
 			switch (call.getMnemonicCode()) {
 			case SHUTDOWN:
 				shutdown();
