@@ -11,4 +11,11 @@ loop:       mov   [ax],cx
     		cmp   cx, 0
 		    jnz   loop
 		    push  20
-            halt
+            fork
+            log   "FORK 1"
+            fork
+            log   "FORK 2"
+            fork
+            log   "FORK 3"
+            exec  "test.prg"  
+            log   "AFTER EXEC"                      

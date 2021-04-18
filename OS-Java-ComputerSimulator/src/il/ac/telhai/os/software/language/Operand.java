@@ -14,7 +14,7 @@ public abstract class Operand {
 	
     public static Operand newOperand(String operandString, Map<String, Integer> symbolTable) throws ParseException {
     	if (operandString == null) return null;
-    	String s = operandString.trim().toUpperCase();
+    	String s = operandString.trim();
     	if (s.length() == 0) return null;
     	
     	if (s.startsWith("\"")) {
@@ -22,6 +22,7 @@ public abstract class Operand {
         	s = s.substring(1, s.length()-1);
         	return new StringOperand(s);
     	}
+   		s = s.toUpperCase();
     	
     	boolean isIndirect = s.startsWith("[");
     	if (isIndirect ) { 

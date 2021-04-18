@@ -10,13 +10,20 @@ import il.ac.telhai.os.software.language.*;
 /**
  * 
  * @author cmshalom
+ * A simple CPU implementation that is quite different than a real one:
+ * The context switching is implemented in a very unrealistic way:
+ *    The CPU contains a pointer to the currently running software 
+ *    At every clock tick it will run one step of it, unless interrupted during the 
+ *    previous clock tick. 
+ *    In such a case it will run the interrupt handler if one is installed for 
+ *    the type of interrupt source.
  */
 public class CPU implements Clockeable {
 
 	private Clock clock;
 	private Registers registers = new Registers();
 	private Memory realMemory;
-    private Software running;
+	private Software running;
 	private HashMap<Class<? extends InterruptSource>, InterruptHandler> interruptVector = 
 			new HashMap<Class<? extends InterruptSource>, InterruptHandler>(); 
 	private InterruptSource pendingInterrupt;
@@ -27,17 +34,17 @@ public class CPU implements Clockeable {
 		this.realMemory = realMemory;
 	}
 
-    private boolean halted() {
-    	boolean ret = registers.getFlag(Registers.FLAG_HALTED);
-    	if (ret) clock.shutdown();
-    	return ret;
-    }
+	private boolean halted() {
+		boolean ret = registers.getFlag(Registers.FLAG_HALTED);
+		if (ret) clock.shutdown();
+		return ret;
+	}
 
-	
+
 	@Override
 	public void tick() {
 		if (halted()) return;
-		
+
 		if (pendingInterrupt != null) {
 			InterruptSource source = pendingInterrupt;
 			pendingInterrupt = null;
@@ -49,30 +56,38 @@ public class CPU implements Clockeable {
 			}
 		}
 
-	    if (running != null) {
-	    	// This allows us to run either an Operating system written in Java,
-	    	// or a program written in an Assembly Language
-		    if (running instanceof OperatingSystem) { 
-			    ((OperatingSystem) running).step();
-		    } else {
-		    	try {
-				ProgramLine programLine = ((Program)running).fetchLine(registers);
-				programLine.execute(registers, realMemory);
-		    	} catch (SystemCall call) {
-		    		interrupt(call);
-		    	}
-		    }
+		if (running != null) {
+			// This allows us to run either an Operating system written in Java,
+			// or a program written in an Assembly Language
+			if (running instanceof OperatingSystem) { 
+				((OperatingSystem) running).step();
+			} else {
+				try {
+					ProgramLine programLine = ((Program)running).fetchLine(registers);
+					programLine.execute(registers, realMemory);
+				} catch (SystemCall call) {
+					interrupt(call);
+				} catch (Trap trap) {
+					interrupt(trap);
+					registers.add(Register.IP, -1);
+				}
+			}
 		}
 	}
 
 	public void execute(Instruction instruction) {
-	    instruction.execute(registers, realMemory);
+		try {
+			instruction.execute(registers, realMemory);
+		} catch (Trap t) {
+			this.interrupt(t);
+		}
+
 	}
 
 	public void setInterruptHandler(Class<? extends InterruptSource> cls, InterruptHandler handler) {
 		interruptVector.put(cls , handler);
 	}
-	
+
 	private InterruptHandler getHandler(InterruptSource source) {
 		InterruptHandler result = null;
 		@SuppressWarnings("rawtypes")
@@ -92,9 +107,9 @@ public class CPU implements Clockeable {
 		running = software;
 		if (registers != null) this.registers = registers;
 	}
-	
+
 	public String getRegisters() {
 		return registers.toString();
 	}
-	
+
 }

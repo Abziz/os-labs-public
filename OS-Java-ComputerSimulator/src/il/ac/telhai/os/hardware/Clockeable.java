@@ -1,9 +1,8 @@
 package il.ac.telhai.os.hardware;
 
-
 /**
  * 
- * @author cmhalom
+ * @author cmshalom
  * Every device to get clock ticks must implement this interface
  * (and also made known to the corresponding clock device)
  */

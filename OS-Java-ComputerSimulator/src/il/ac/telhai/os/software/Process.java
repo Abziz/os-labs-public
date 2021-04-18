@@ -2,6 +2,10 @@ package il.ac.telhai.os.software;
 
 import java.io.FileNotFoundException;
 import java.text.ParseException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -14,17 +18,22 @@ import il.ac.telhai.os.software.language.Registers;
 public class Process {
 	private static final Logger logger = Logger.getLogger(Process.class);
 
-	static Process process = null;
-	private static int lastId = 0;
+	private static Process root = null;  // The first process created
+	private static int lastId = 0;       // The id of the last process created
+	private static Map<Integer, Process> idMap = new HashMap<Integer, Process>();  // All the existing processes are here
+
+	private Process parent;
+	private Set<Process> children = new HashSet<Process>();
 
 	private int id;
-    private Program program;
+	private Program program;
 	Registers registers;
 
 	public Process(Process parent) {
-		if (process != null) throw new IllegalArgumentException("Only one process allowed");
-		process = this;
-        this.id = ++lastId;     
+		// TODO: Make sure that a) there is exactly one root (parent = null),
+		//                      b) the parent points to all children,
+		//                      b) Process inherits its registers from its parent
+		//                      c) every new process is added to the idMap
 		this.registers = new Registers();
 	}
 
@@ -36,6 +45,8 @@ public class Process {
 		registers.set(Register.IP, program.getEntryPoint());
 	}
 
+	// TODO: Write the fork function
+	
 	public boolean exec(String fileName) {
 		try {
 			this.program = new Program(fileName);
@@ -60,8 +71,18 @@ public class Process {
 		return id;
 	}
 	
+	public Process getParent() {
+		return parent;
+	}
+
+	public static Process getProcess(int id) {
+		// TODO: Return the process with given id (if it exists, null otherwise)
+		return null;
+	}
+
 	@Override
 	public String toString() {
 		return "Process [id=" + id + ", program=" + program.getFileName() + "]";
-	}	
+	}
+
 }
