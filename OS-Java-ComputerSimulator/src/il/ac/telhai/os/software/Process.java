@@ -19,10 +19,10 @@ public class Process {
 	private static final Logger logger = Logger.getLogger(Process.class);
 
 	private static Process root = null;  // The first process created
-	private static int lastId = 0;       // The id of the last process created
-	private static Map<Integer, Process> idMap = new HashMap<Integer, Process>();  // All the existing processes are here
+	private static int lastId = 0;
+	private static Map<Integer, Process> idMap = new HashMap<Integer, Process>();
 
-	private Process parent;
+	private Process parent; // This warning should disappear when we implement getPid
 	private Set<Process> children = new HashSet<Process>();
 
 	private int id;
@@ -30,11 +30,30 @@ public class Process {
 	Registers registers;
 
 	public Process(Process parent) {
-		// TODO: Make sure that a) there is exactly one root (parent = null),
-		//                      b) the parent points to all children,
-		//                      b) Process inherits its registers from its parent
-		//                      c) every new process is added to the idMap
-		this.registers = new Registers();
+		// Add to process tree
+		if (parent != null) {
+			parent.children.add(this);
+		} else {
+			if (root != null) throw new IllegalArgumentException("Only one root process allowed");
+			root = this;
+		}
+		this.parent = parent;
+
+		//                  Assign an id to process
+		do {
+		    lastId++;
+		} while (idMap.containsKey(lastId));
+        this.id = lastId;
+        
+		//                  Add to the id Map
+		idMap.put(this.id, this);
+		
+		if (parent != null) {
+			this.program = parent.program;
+			this.registers = new Registers(parent.registers);
+		} else {
+			this.registers = new Registers();
+		}
 	}
 
 	private void setRegistersFor(Program program) {
@@ -45,8 +64,6 @@ public class Process {
 		registers.set(Register.IP, program.getEntryPoint());
 	}
 
-	// TODO: Write the fork function
-	
 	public boolean exec(String fileName) {
 		try {
 			this.program = new Program(fileName);
@@ -58,7 +75,24 @@ public class Process {
 		return true;
 	}
 
+	public Process fork() {
+		Process child = new Process (this);
+		child.registers.set(Register.AX, 0);
+		this.registers.set(Register.AX, child.getId());
+		return child;
+	}
+	
+	void exit(int status) {
+		root.children.addAll(children);
+		for (Process child: children) {
+			child.parent = root;
+		}
+		children = new HashSet<Process>();
+	}
+
 	public void run(CPU cpu) {
+		// TODO: The parameter cpu is currently unused. 
+		// It is useless if cpu will remain a static variable of Operating System	
 		cpu.contextSwitch(program, registers);
 		registers.setFlag(Registers.FLAG_USER_MODE, true);
 	}
@@ -76,8 +110,7 @@ public class Process {
 	}
 
 	public static Process getProcess(int id) {
-		// TODO: Return the process with given id (if it exists, null otherwise)
-		return null;
+		return idMap.get(id);
 	}
 
 	@Override

@@ -75,12 +75,23 @@ public class OperatingSystem implements Software {
 		@Override
 		public void handle(InterruptSource source) {
 			SystemCall call = (SystemCall) source;
-			logger.trace(call);
 			switch (call.getMnemonicCode()) {
 			case SHUTDOWN:
 				shutdown();
 				break;
-			// TODO: Add additional system call implementations here
+			case FORK:
+				init.fork();
+				init.run(cpu);
+				break;
+			case EXEC:
+				init.exec(call.getOp1().toString());
+				init.run(cpu);
+				break;
+			case LOG:
+				logger.info(call.getOp1());
+				init.run(cpu);
+				break;
+
 			default:
 				throw new IllegalArgumentException("Unknown System Call:" + call);
 			}
