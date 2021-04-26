@@ -12,5 +12,9 @@ public abstract class InstructionOperand extends Operand {
 	public InstructionOperand (boolean isIndirect) {
 		this.isIndirect = isIndirect;
 	}
+	
+	public String getString(Registers reg, Memory mem) {
+		return String.format("%d", this.getWord(reg, mem));
+	}
 
 }

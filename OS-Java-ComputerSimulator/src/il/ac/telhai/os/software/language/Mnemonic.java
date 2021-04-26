@@ -30,6 +30,8 @@ public enum Mnemonic {
 	EXEC(3, false, 1),
 	EXIT(3, false, 1),
 	LOG(3, false, 1),
+	GETPID(3, false, 0),
+	GETPPID(3, false, 0),
 	SHUTDOWN(3, false, 0);
 	
 	private int type;  // 1-Directive, 2-Instruction, 3-System Call

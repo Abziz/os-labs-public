@@ -8,7 +8,10 @@ import il.ac.telhai.os.hardware.InterruptSource;
 import il.ac.telhai.os.hardware.Peripheral;
 import il.ac.telhai.os.hardware.PowerSwitch;
 import il.ac.telhai.os.software.language.Instruction;
+import il.ac.telhai.os.software.language.Operand;
 import il.ac.telhai.os.software.language.SystemCall;
+import il.ac.telhai.os.software.scheduler.FCFSScheduler;
+import il.ac.telhai.os.software.scheduler.Scheduler;
 
 public class OperatingSystem implements Software {
 	private static final Logger logger = Logger.getLogger(OperatingSystem.class);
@@ -17,7 +20,8 @@ public class OperatingSystem implements Software {
 	CPU cpu;
 	private Set<Peripheral> peripherals;
 	private boolean initialized = false;
-	Process init;
+	private Scheduler scheduler;
+
 
 	public OperatingSystem (CPU cpu, Set<Peripheral> peripherals) {
 		if (instance != null) {
@@ -36,16 +40,18 @@ public class OperatingSystem implements Software {
 		if (!initialized) {
 			initialize();
 		} else {
-			init.run(cpu);
+			scheduler.schedule();;
 		}
 	}
 		
 	private void initialize() {
 		installHandlers();
-		init = new Process(null);
+		ProcessControlBlock init = new ProcessControlBlock(null);
 		if (!init.exec("init.prg")) {
 			throw new IllegalArgumentException ("Cannot load init");
 		}
+		scheduler = new FCFSScheduler(cpu, init);
+		scheduler.schedule();
 		initialized = true;
 	}	
 	
@@ -75,28 +81,32 @@ public class OperatingSystem implements Software {
 		@Override
 		public void handle(InterruptSource source) {
 			SystemCall call = (SystemCall) source;
+			Operand op1 = call.getOp1();
+			@SuppressWarnings("unused")
+			Operand op2 = call.getOp2();
+			ProcessControlBlock current = scheduler.getCurrent();
 			switch (call.getMnemonicCode()) {
 			case SHUTDOWN:
 				shutdown();
 				break;
 			case FORK:
-				init.fork();
-				init.run(cpu);
+				ProcessControlBlock child = current.fork();
+				scheduler.addReady(child);
+				current.run(cpu);
 				break;
 			case EXEC:
-				init.exec(call.getOp1().toString());
-				init.run(cpu);
+				current.exec(cpu.getString(op1));
+				current.run(cpu);
 				break;
 			case LOG:
-				logger.info(call.getOp1());
-				init.run(cpu);
-				break;
+				logger.info(cpu.getString(call.getOp1()));
+				current.run(cpu);
+                break;
 
+                // TODO: Implement additional system calls here
 			default:
 				throw new IllegalArgumentException("Unknown System Call:" + call);
 			}
 		}
 	}
-
-	
 }

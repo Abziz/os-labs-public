@@ -81,7 +81,18 @@ public class CPU implements Clockeable {
 		} catch (Trap t) {
 			this.interrupt(t);
 		}
+	}
+	
+	public int getWord(Operand op) {
+		return op.getWord(registers, realMemory);
+	}
 
+	public int getByte(Operand op) {
+		return op.getByte(registers, realMemory);
+	}
+	
+	public String getString(Operand op) {
+			return op.getString(registers, realMemory);
 	}
 
 	public void setInterruptHandler(Class<? extends InterruptSource> cls, InterruptHandler handler) {

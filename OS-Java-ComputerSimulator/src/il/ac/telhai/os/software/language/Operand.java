@@ -2,6 +2,8 @@ package il.ac.telhai.os.software.language;
 
 import java.text.ParseException;
 import java.util.Map;
+
+import il.ac.telhai.os.hardware.Memory;
 public abstract class Operand {
 		
 	/**
@@ -47,4 +49,9 @@ public abstract class Operand {
     		}
     	}
     }
+
+    public abstract int getWord(Registers registers, Memory memory);
+    public abstract byte getByte(Registers registers, Memory memory);
+    public abstract String getString(Registers registers, Memory memory);
+
 }

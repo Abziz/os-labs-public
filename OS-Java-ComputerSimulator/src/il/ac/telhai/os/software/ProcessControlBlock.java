@@ -15,21 +15,21 @@ import il.ac.telhai.os.software.language.Program;
 import il.ac.telhai.os.software.language.Register;
 import il.ac.telhai.os.software.language.Registers;
 
-public class Process {
-	private static final Logger logger = Logger.getLogger(Process.class);
+public class ProcessControlBlock {
+	private static final Logger logger = Logger.getLogger(ProcessControlBlock.class);
 
-	private static Process root = null;  // The first process created
+	private static ProcessControlBlock root = null;  // The first process created
 	private static int lastId = 0;
-	private static Map<Integer, Process> idMap = new HashMap<Integer, Process>();
+	private static Map<Integer, ProcessControlBlock> idMap = new HashMap<Integer, ProcessControlBlock>();
 
-	private Process parent; // This warning should disappear when we implement getPid
-	private Set<Process> children = new HashSet<Process>();
+	private ProcessControlBlock parent; // This warning should disappear when we implement getPid
+	private Set<ProcessControlBlock> children = new HashSet<ProcessControlBlock>();
 
 	private int id;
 	private Program program;
 	Registers registers;
 
-	public Process(Process parent) {
+	public ProcessControlBlock(ProcessControlBlock parent) {
 		// Add to process tree
 		if (parent != null) {
 			parent.children.add(this);
@@ -41,13 +41,13 @@ public class Process {
 
 		//                  Assign an id to process
 		do {
-		    lastId++;
+			lastId++;
 		} while (idMap.containsKey(lastId));
-        this.id = lastId;
-        
+		this.id = lastId;
+
 		//                  Add to the id Map
 		idMap.put(this.id, this);
-		
+
 		if (parent != null) {
 			this.program = parent.program;
 			this.registers = new Registers(parent.registers);
@@ -75,41 +75,48 @@ public class Process {
 		return true;
 	}
 
-	public Process fork() {
-		Process child = new Process (this);
+	public void exit(int status) {
+		// TODO: Pass all children to the root (init) process
+		//       Remove this one from the tree
+		//       Remove this from idMap
+	}
+
+
+	public ProcessControlBlock fork() {
+		ProcessControlBlock child = new ProcessControlBlock (this);
 		child.registers.set(Register.AX, 0);
 		this.registers.set(Register.AX, child.getId());
 		return child;
 	}
-	
-	void exit(int status) {
-		root.children.addAll(children);
-		for (Process child: children) {
-			child.parent = root;
-		}
-		children = new HashSet<Process>();
-	}
 
 	public void run(CPU cpu) {
-		// TODO: The parameter cpu is currently unused. 
+		// TODO (not for students): The parameter cpu is currently unused. 
 		// It is useless if cpu will remain a static variable of Operating System	
 		cpu.contextSwitch(program, registers);
 		registers.setFlag(Registers.FLAG_USER_MODE, true);
+	}
+	
+	public void getPid() {
+		// TODO:
+	}
+
+	public void getPPid() {
+		// TODO:
 	}
 
 	public Program getProgram() {
 		return program;
 	}
-	
+
 	public int getId() {
 		return id;
 	}
-	
-	public Process getParent() {
+
+	public ProcessControlBlock getParent() {
 		return parent;
 	}
 
-	public static Process getProcess(int id) {
+	public static ProcessControlBlock getProcess(int id) {
 		return idMap.get(id);
 	}
 
@@ -117,5 +124,6 @@ public class Process {
 	public String toString() {
 		return "Process [id=" + id + ", program=" + program.getFileName() + "]";
 	}
+	
 
 }
