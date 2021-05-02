@@ -14,7 +14,7 @@ public class TimerTest extends CPU {
 	@Test
 	public void test() {
 		Timer t = new Timer(this, clock);
-		t.set(10);
+		t.setAlarm(10);
 		clock.run();
 	}
 	

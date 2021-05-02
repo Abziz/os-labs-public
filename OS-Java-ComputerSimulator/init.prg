@@ -31,8 +31,9 @@ fork2:      fork
             exit  2
 fork3:      fork
             CMP   AX, 0
-            JNZ   end
+            JNZ   finalloop
             exec  "prog.prg"
             log   "CANNOT EXEC prog.prg"
             exit  3
-end:        exit  0
+finalloop:  log   "looping"
+            JMP   finalloop

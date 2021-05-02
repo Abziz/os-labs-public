@@ -3,15 +3,9 @@ package il.ac.telhai.os.software;
 import java.util.Set;
 import org.apache.log4j.Logger;
 
-import il.ac.telhai.os.hardware.CPU;
-import il.ac.telhai.os.hardware.InterruptSource;
-import il.ac.telhai.os.hardware.Peripheral;
-import il.ac.telhai.os.hardware.PowerSwitch;
-import il.ac.telhai.os.software.language.Instruction;
-import il.ac.telhai.os.software.language.Operand;
-import il.ac.telhai.os.software.language.SystemCall;
-import il.ac.telhai.os.software.scheduler.FCFSScheduler;
-import il.ac.telhai.os.software.scheduler.Scheduler;
+import il.ac.telhai.os.hardware.*;
+import il.ac.telhai.os.software.language.*;
+import il.ac.telhai.os.software.scheduler.*;
 
 public class OperatingSystem implements Software {
 	private static final Logger logger = Logger.getLogger(OperatingSystem.class);
@@ -19,11 +13,11 @@ public class OperatingSystem implements Software {
 	private static OperatingSystem instance = null;
 	CPU cpu;
 	private Set<Peripheral> peripherals;
+	private Timer timer;
 	private boolean initialized = false;
 	private Scheduler scheduler;
 
-
-	public OperatingSystem (CPU cpu, Set<Peripheral> peripherals) {
+	public OperatingSystem(CPU cpu, Set<Peripheral> peripherals) {
 		if (instance != null) {
 			throw new IllegalStateException("Operating System is a singleton");
 		}
@@ -40,33 +34,34 @@ public class OperatingSystem implements Software {
 		if (!initialized) {
 			initialize();
 		} else {
-			scheduler.schedule();;
+			scheduler.schedule();
 		}
 	}
-		
+
 	private void initialize() {
 		installHandlers();
 		ProcessControlBlock init = new ProcessControlBlock(null);
 		if (!init.exec("init.prg")) {
-			throw new IllegalArgumentException ("Cannot load init");
+			throw new IllegalArgumentException("Cannot load init");
 		}
+		// TODO: use Round Robin Scheduler instead
 		scheduler = new FCFSScheduler(cpu, init);
 		scheduler.schedule();
 		initialized = true;
-	}	
-	
+	}
+
 	private void installHandlers() {
 		for (Peripheral p : peripherals) {
 			if (p instanceof PowerSwitch) {
 				cpu.setInterruptHandler(p.getClass(), new PowerSwitchInterruptHandler());
 			}
+			// TODO: register the Timer Interrupt Handler
 		}
 		cpu.setInterruptHandler(SystemCall.class, new SystemCallInterruptHandler());
 	}
 
-
 	private void shutdown() {
-		logger.info( "System going for shutdown");
+		logger.info("System going for shutdown");
 		cpu.execute(Instruction.create("HALT"));
 	}
 
@@ -76,6 +71,8 @@ public class OperatingSystem implements Software {
 			shutdown();
 		}
 	}
+
+	// TODO: create the Timer Interrupt Handler
 
 	private class SystemCallInterruptHandler implements InterruptHandler {
 		@Override
@@ -114,9 +111,9 @@ public class OperatingSystem implements Software {
 			case LOG:
 				logger.info(cpu.getString(call.getOp1()));
 				current.run(cpu);
-                break;
+				break;
 
-                // TODO: Implement additional system calls here
+			// TODO: Implement additional system calls here
 			default:
 				throw new IllegalArgumentException("Unknown System Call:" + call);
 			}

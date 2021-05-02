@@ -29,6 +29,7 @@ public enum Mnemonic {
 	FORK(3, false, 0),
 	EXEC(3, false, 1),
 	EXIT(3, false, 1),
+	YIELD(3, false, 0),
 	LOG(3, false, 1),
 	GETPID(3, false, 0),
 	GETPPID(3, false, 0),

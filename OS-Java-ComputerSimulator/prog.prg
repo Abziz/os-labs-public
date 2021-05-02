@@ -18,6 +18,7 @@ loop:       CMP   cx,0
             getppid
             log   AX
             DEC   cx
+            NOP
             JMP   loop
 exit:       getpid
             CMP   AX,4
