@@ -98,6 +98,19 @@ public class OperatingSystem implements Software {
 				current.exec(cpu.getString(op1));
 				current.run(cpu);
 				break;
+			case EXIT:
+				current.exit(cpu.getWord(op1));
+				scheduler.removeCurrent();
+				scheduler.schedule();
+				break;
+			case GETPID:
+				current.getPid();
+				current.run(cpu);
+				break;
+			case GETPPID:
+				current.getPPid();
+				current.run(cpu);
+				break;
 			case LOG:
 				logger.info(cpu.getString(call.getOp1()));
 				current.run(cpu);

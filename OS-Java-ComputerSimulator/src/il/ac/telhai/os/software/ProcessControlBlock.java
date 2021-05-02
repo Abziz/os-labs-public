@@ -76,9 +76,17 @@ public class ProcessControlBlock {
 	}
 
 	public void exit(int status) {
-		// TODO: Pass all children to the root (init) process
-		//       Remove this one from the tree
-		//       Remove this from idMap
+		// TODO: assert (parent != null);
+		root.children.addAll(children);
+		for (ProcessControlBlock child: children) {
+			child.parent = root;
+		}
+		children.clear();
+		if (parent != null) // TODO: remove this
+    		parent.children.remove(this);
+
+		idMap.remove(id);
+
 	}
 
 
@@ -90,18 +98,18 @@ public class ProcessControlBlock {
 	}
 
 	public void run(CPU cpu) {
-		// TODO (not for students): The parameter cpu is currently unused. 
+		// TODO: (not for students) The parameter cpu is currently unused. 
 		// It is useless if cpu will remain a static variable of Operating System	
 		cpu.contextSwitch(program, registers);
 		registers.setFlag(Registers.FLAG_USER_MODE, true);
 	}
 	
 	public void getPid() {
-		// TODO:
+		registers.set(Register.AX, id);		
 	}
 
 	public void getPPid() {
-		// TODO:
+		registers.set(Register.AX, parent==null?-1:parent.id);				
 	}
 
 	public Program getProgram() {
