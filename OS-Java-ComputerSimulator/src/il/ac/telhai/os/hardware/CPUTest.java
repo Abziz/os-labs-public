@@ -15,6 +15,8 @@ public class CPUTest {
 	private static final int FREQUENCY = 100;
 	private static final int SEGMENT_SIZE = 4096;
 	private static final int NUMBER_OF_SEGMENTS = 128;
+	protected static final int NUMBER_OF_PAGES = 1024;
+
 
 	private Clock clock;
 	private CPU cpu;
@@ -25,7 +27,7 @@ public class CPUTest {
 	public void initComputer () throws FileNotFoundException, ParseException {
 		clock = new Clock(FREQUENCY);
 		memory = new RealMemory(SEGMENT_SIZE, NUMBER_OF_SEGMENTS);
-		cpu = new CPU(clock, memory);
+		cpu = new CPU(clock, memory, NUMBER_OF_PAGES);
 
 	}
 

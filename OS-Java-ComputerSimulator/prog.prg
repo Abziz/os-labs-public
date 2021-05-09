@@ -1,27 +1,25 @@
-data:       equ   100
-iterations: equ   20
+me:         equ   100
+parent:     equ   104
 stack_size: equ   100
 data_segments: equ 1
-main:	    getpid
-		    PUSH  AX
-		    log   AX
-		    getppid
-		    PUSH  AX
-		    log   AX
-            MOV   cx, iterations
-loop:       CMP   cx,0
-            JZ    exit
+main:       getpid
             log   "THIS IS PROCESS"
-            getpid
-            log   AX
-            log   "MY PARENT IS"
+            MOV   DX, AX
+            log   DX
+            MOV   me, AX
             getppid
+            log   "MY PARENT IS"
             log   AX
-            DEC   cx
-            NOP
+            MOV   parent, AX
+            MOV   CX, DX
+loop:       CMP   CX,0
+            JZ    exit
+            DEC   CX
+            PUSH  DX
+            PUSH  [me]
+            PUSH  [parent]
             JMP   loop
-exit:       getpid
-            CMP   AX,4
+exit:       CMP   DX,4
             JZ    shutdown
-            exit  AX
+            exit  [me]
 shutdown:   shutdown

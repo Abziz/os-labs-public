@@ -5,9 +5,12 @@ import org.junit.Test;
 public class TimerTest extends CPU {
 	private static final int FREQUENCY = 10;
 	private static final Clock clock = new Clock(FREQUENCY);  
+	protected static final int SEGMENT_SIZE = 4096;
+	protected static final int NUMBER_OF_PAGES = 1024;
+
 	
 	public TimerTest() {
-		super(clock, new RealMemory(100, 1));
+		super(clock, new RealMemory(SEGMENT_SIZE, 1), NUMBER_OF_PAGES);
 	}
 
 

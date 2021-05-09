@@ -1,22 +1,16 @@
-data:       equ   100
+me:         equ   100
+parent:     equ   104
 stack_size: equ   100
 data_segments: equ 1
-main:       MOV   cx, 5
-            PUSH  10
-            MOV   ax, data
-loop:       MOV   [ax],cx
-            ADD   ax, 4
-		    DEC   cx
-    		CMP   cx, 0
-		    JNZ   loop
+main:       getpid
             log   "THIS IS PROCESS"
-            getpid
-            PUSH  AX
-            log   AX
-            log   "MY PARENT IS"
+            MOV   DX, AX
+            log   DX
+            MOV   me, AX
             getppid
-            PUSH  AX
+            log   "MY PARENT IS"
             log   AX
+            MOV   parent, AX
 fork1:      fork
             CMP   AX, 0
             JNZ   fork2
@@ -35,5 +29,4 @@ fork3:      fork
             exec  "prog.prg"
             log   "CANNOT EXEC prog.prg"
             exit  3
-finalloop:  log   "looping"
-            JMP   finalloop
+finalloop:  JMP   finalloop

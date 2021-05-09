@@ -1,6 +1,11 @@
 package il.ac.telhai.os.hardware;
 
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Queue;
+import java.util.PriorityQueue;
+
+import org.apache.log4j.Logger;
 
 import il.ac.telhai.os.software.InterruptHandler;
 import il.ac.telhai.os.software.OperatingSystem;
@@ -18,20 +23,29 @@ import il.ac.telhai.os.software.language.*;
  *    In such a case it will run the interrupt handler if one is installed for 
  *    the type of interrupt source.
  */
-public class CPU implements Clockeable {
+public class CPU extends MMU implements Clockeable {
+	private static final Logger logger = Logger.getLogger(CPU.class);
 
 	private Clock clock;
 	private Registers registers = new Registers();
-	private Memory realMemory;
 	private Software running;
 	private HashMap<Class<? extends InterruptSource>, InterruptHandler> interruptVector = 
 			new HashMap<Class<? extends InterruptSource>, InterruptHandler>(); 
-	private InterruptSource pendingInterrupt;
+	private Queue<InterruptSource> pendingInterrupts = new PriorityQueue<InterruptSource>(new InterruptSourceComparator());
+	
+	private class InterruptSourceComparator implements Comparator<InterruptSource> {
+		@Override
+		public int compare(InterruptSource o1, InterruptSource o2) {
+			return o1.getPriority() - o2.getPriority();
+		}
+	}
 
-	public CPU (Clock clock, RealMemory realMemory) {
+
+
+	public CPU (Clock clock, RealMemory realMemory, int numberOfPages) {
+		super(realMemory, numberOfPages);
 		this.clock = clock; 
 		clock.addDevice(this);
-		this.realMemory = realMemory;
 	}
 
 	private boolean halted() {
@@ -45,9 +59,9 @@ public class CPU implements Clockeable {
 	public void tick() {
 		if (halted()) return;
 
-		if (pendingInterrupt != null) {
-			InterruptSource source = pendingInterrupt;
-			pendingInterrupt = null;
+		if (pendingInterrupts.size() > 1) logger.trace("Multiple pending interrupts");
+		if (pendingInterrupts.size() != 0) {
+			InterruptSource source = pendingInterrupts.remove();
 			InterruptHandler handler = getHandler(source);
 			if (handler != null) {
 				registers.setFlag(Registers.FLAG_USER_MODE, false);
@@ -64,7 +78,7 @@ public class CPU implements Clockeable {
 			} else {
 				try {
 					ProgramLine programLine = ((Program)running).fetchLine(registers);
-					programLine.execute(registers, realMemory);
+					programLine.execute(registers, this);
 				} catch (SystemCall call) {
 					interrupt(call);
 				} catch (Trap trap) {
@@ -77,24 +91,12 @@ public class CPU implements Clockeable {
 
 	public void execute(Instruction instruction) {
 		try {
-			instruction.execute(registers, realMemory);
+			instruction.execute(registers, this);
 		} catch (Trap t) {
 			this.interrupt(t);
 		}
 	}
 	
-	public int getWord(Operand op) {
-		return op.getWord(registers, realMemory);
-	}
-
-	public int getByte(Operand op) {
-		return op.getByte(registers, realMemory);
-	}
-	
-	public String getString(Operand op) {
-			return op.getString(registers, realMemory);
-	}
-
 	public void setInterruptHandler(Class<? extends InterruptSource> cls, InterruptHandler handler) {
 		interruptVector.put(cls , handler);
 	}
@@ -111,7 +113,7 @@ public class CPU implements Clockeable {
 	}
 
 	public void interrupt(InterruptSource source) {
-		pendingInterrupt = source;
+		pendingInterrupts.add(source);
 	}
 
 	public void contextSwitch (Software software, Registers registers) {

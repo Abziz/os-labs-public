@@ -48,7 +48,7 @@ public class Computer implements Runnable {
 
 		clock = new Clock(frequency);
 		memory = new RealMemory(segmentSize, numberOfSegments);
-		cpu = new CPU(clock, memory);
+		cpu = new CPU(clock, memory, numberOfPages);
 		timer = new Timer(cpu, clock);
 		powerSwitch = new PowerSwitch(cpu, container);
 		peripherals.add(timer);

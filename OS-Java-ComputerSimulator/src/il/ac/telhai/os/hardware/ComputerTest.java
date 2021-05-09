@@ -16,8 +16,8 @@ public class ComputerTest extends Computer {
 		c.run();
 		assertEquals(		
 				"\nCS=0	DS=1	SS=0	ES=2" +
-				"\nAX=4	BX=0	CX=0	DX=0" +
-				"\nSP=96	IP=23	SI=0	DI=0" +
+				"\nAX=1	BX=0	CX=0	DX=4" +
+				"\nSP=56	IP=21	SI=0	DI=0" +
 				"\nBP=0	FL=2\t", c.cpu.getRegisters());
 		assertEquals(1, ProcessControlBlock.getProcess(1).getId());
 		assertNull(ProcessControlBlock.getProcess(2));

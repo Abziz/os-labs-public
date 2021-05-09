@@ -17,7 +17,9 @@ public class OperatingSystem implements Software {
 	private boolean initialized = false;
 	private Scheduler scheduler;
 
-	public OperatingSystem(CPU cpu, Set<Peripheral> peripherals) {
+
+
+	public OperatingSystem (CPU cpu, Set<Peripheral> peripherals) {
 		if (instance != null) {
 			throw new IllegalStateException("Operating System is a singleton");
 		}
@@ -37,33 +39,34 @@ public class OperatingSystem implements Software {
 			scheduler.schedule();
 		}
 	}
-
+		
 	private void initialize() {
 		installHandlers();
 		ProcessControlBlock init = new ProcessControlBlock(null);
 		if (!init.exec("init.prg")) {
-			throw new IllegalArgumentException("Cannot load init");
+			throw new IllegalArgumentException ("Cannot load init");
 		}
 		scheduler = new RoundRobinScheduler(cpu, init, timer);
 		scheduler.schedule();
 		initialized = true;
-	}
-
+	}	
+	
 	private void installHandlers() {
 		for (Peripheral p : peripherals) {
 			if (p instanceof PowerSwitch) {
 				cpu.setInterruptHandler(p.getClass(), new PowerSwitchInterruptHandler());
-			}
-			if( p instanceof Timer) {
+			} else if (p instanceof Timer) {
 				timer = (Timer) p;
 				cpu.setInterruptHandler(p.getClass(), new TimerInterruptHandler());
 			}
 		}
 		cpu.setInterruptHandler(SystemCall.class, new SystemCallInterruptHandler());
+		cpu.setInterruptHandler(PageFault.class, new VMM(cpu));
 	}
 
+
 	private void shutdown() {
-		logger.info("System going for shutdown");
+		logger.info( "System going for shutdown");
 		cpu.execute(Instruction.create("HALT"));
 	}
 
@@ -73,6 +76,7 @@ public class OperatingSystem implements Software {
 			shutdown();
 		}
 	}
+	
 	private class TimerInterruptHandler implements InterruptHandler {
 		@Override
 		public void handle(InterruptSource source) {
@@ -81,11 +85,12 @@ public class OperatingSystem implements Software {
 			scheduler.schedule();
 		}
 	}
-
+	
 	private class SystemCallInterruptHandler implements InterruptHandler {
 		@Override
 		public void handle(InterruptSource source) {
 			SystemCall call = (SystemCall) source;
+			logger.trace(call);
 			Operand op1 = call.getOp1();
 			@SuppressWarnings("unused")
 			Operand op2 = call.getOp2();
@@ -100,12 +105,17 @@ public class OperatingSystem implements Software {
 				current.run(cpu);
 				break;
 			case EXEC:
-				current.exec(cpu.getString(op1));
+				current.exec(current.getString(op1));
 				current.run(cpu);
 				break;
 			case EXIT:
-				current.exit(cpu.getWord(op1));
+				current.exit(current.getWord(op1));
 				scheduler.removeCurrent();
+				scheduler.schedule();
+				break;
+			case YIELD:
+				scheduler.removeCurrent();
+				scheduler.addReady(current);
 				scheduler.schedule();
 				break;
 			case GETPID:
@@ -117,9 +127,9 @@ public class OperatingSystem implements Software {
 				current.run(cpu);
 				break;
 			case LOG:
-				logger.info(cpu.getString(call.getOp1()));
+				logger.info(current.getString(op1));
 				current.run(cpu);
-				break;
+                break;
 			default:
 				throw new IllegalArgumentException("Unknown System Call:" + call);
 			}
