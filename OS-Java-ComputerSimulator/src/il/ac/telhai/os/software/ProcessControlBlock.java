@@ -77,17 +77,14 @@ public class ProcessControlBlock {
 	}
 
 	public void exit(int status) {
-		// TODO: assert (parent != null);
+		assert (parent != null);
 		root.children.addAll(children);
 		for (ProcessControlBlock child : children) {
 			child.parent = root;
 		}
 		children.clear();
-		if (parent != null) // TODO: remove this check
-			parent.children.remove(this);
-
+		parent.children.remove(this);
 		idMap.remove(id);
-
 	}
 
 	public ProcessControlBlock fork() {

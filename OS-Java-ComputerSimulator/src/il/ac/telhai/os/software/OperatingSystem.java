@@ -44,8 +44,7 @@ public class OperatingSystem implements Software {
 		if (!init.exec("init.prg")) {
 			throw new IllegalArgumentException("Cannot load init");
 		}
-		// TODO: use Round Robin Scheduler instead
-		scheduler = new FCFSScheduler(cpu, init);
+		scheduler = new RoundRobinScheduler(cpu, init, timer);
 		scheduler.schedule();
 		initialized = true;
 	}
@@ -55,7 +54,10 @@ public class OperatingSystem implements Software {
 			if (p instanceof PowerSwitch) {
 				cpu.setInterruptHandler(p.getClass(), new PowerSwitchInterruptHandler());
 			}
-			// TODO: register the Timer Interrupt Handler
+			if( p instanceof Timer) {
+				timer = (Timer) p;
+				cpu.setInterruptHandler(p.getClass(), new TimerInterruptHandler());
+			}
 		}
 		cpu.setInterruptHandler(SystemCall.class, new SystemCallInterruptHandler());
 	}
@@ -71,8 +73,14 @@ public class OperatingSystem implements Software {
 			shutdown();
 		}
 	}
-
-	// TODO: create the Timer Interrupt Handler
+	private class TimerInterruptHandler implements InterruptHandler {
+		@Override
+		public void handle(InterruptSource source) {
+			ProcessControlBlock current = scheduler.removeCurrent();
+			scheduler.addReady(current);
+			scheduler.schedule();
+		}
+	}
 
 	private class SystemCallInterruptHandler implements InterruptHandler {
 		@Override
@@ -112,8 +120,6 @@ public class OperatingSystem implements Software {
 				logger.info(cpu.getString(call.getOp1()));
 				current.run(cpu);
 				break;
-
-			// TODO: Implement additional system calls here
 			default:
 				throw new IllegalArgumentException("Unknown System Call:" + call);
 			}

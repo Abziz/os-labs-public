@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 
 import il.ac.telhai.os.hardware.CPU;
 import il.ac.telhai.os.hardware.Timer;
+import il.ac.telhai.os.software.OperatingSystem;
 import il.ac.telhai.os.software.ProcessControlBlock;
 
 public class RoundRobinScheduler extends Scheduler {
@@ -24,20 +25,30 @@ public class RoundRobinScheduler extends Scheduler {
 
 	@Override
 	public void addReady(ProcessControlBlock pcb) {
-		// TODO: add process to the ready queue
+		readyProcesses.add(pcb);
 	}
 
 	@Override
 	public ProcessControlBlock removeCurrent() {
-		// TODO: remove currently running process and return it
+		timer.setAlarm(0);
+		ProcessControlBlock result = readyProcesses.remove();
+		assert(result == current);
+		current = null;
+		return result;		
 	}
 
 	@Override
 	public void schedule() {
 		ProcessControlBlock previouslyRunning = current;
-
-		// TODO: decide which process runs next and set the timer for preemption
-
+		
+		current = readyProcesses.peek();
+		if (current != null) {
+			timer.setAlarm(TIME_SLOT_SIZE);
+			current.run(cpu);
+		} else {
+			logger.info("Idle, nothing to do" );
+			cpu.contextSwitch(OperatingSystem.getInstance(), null);
+		}
 		if (current != null && current != previouslyRunning) {
 			logger.info("Process " + current.getId() + " gets the CPU");
 		}
