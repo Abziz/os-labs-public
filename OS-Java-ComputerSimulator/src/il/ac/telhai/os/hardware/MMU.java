@@ -45,30 +45,43 @@ public class MMU implements Memory {
 		return pageTable == null ? memory.getNumberOfSegments() : pageTable.length;
 	}
 
+	public void copySegment(int destinationSegment, int sourceSegment) {
+		memory.dma(destinationSegment, sourceSegment);
+	}
+	
+	int translateSegment(int pageNo,boolean isWrite) {
+		// TODO: translate pageNo according to pageTable (if exists)
+		// a page fault should be raised if:
+		// 	 - the entry is not mapped to memory (previous lab)
+		// 	 - the entry doesn't exist
+		// 	 - the entry exists, CopyOnWrite bit is set and its a write to memory
+		return 0;
+	}
+	
 	@Override
 	public byte readByte(int pageNo, int offset) {
-		// TODO: Translate the pageNumber according to pageTable (if it exists),
+		// TODO (previous lab): Translate the pageNumber according to pageTable (if it exists),
 		//       Then perform the operation using the memory
 		return memory.readByte(pageNo, offset);
 	}
 
 	@Override
 	public void writeByte(int pageNo, int offset, byte value) {
-		// TODO: Translate the pageNumber according to pageTable (if it exists),
+		// TODO (previous lab): Translate the pageNumber according to pageTable (if it exists),
 		//       Then perform the operation using the memory
 		memory.writeByte(pageNo, offset, value);
 	}
 
 	@Override
 	public int readWord(int pageNo, int offset) {
-		// TODO: Translate the pageNumber according to pageTable (if it exists),
+		// TODO (previous lab): Translate the pageNumber according to pageTable (if it exists),
 		//       Then perform the operation using the memory
 		return memory.readWord(pageNo, offset);
 	}
 
 	@Override
 	public void writeWord(int pageNo, int offset, int value) {
-		// TODO: Translate the pageNumber according to pageTable (if it exists),
+		// TODO (previous lab): Translate the pageNumber according to pageTable (if it exists),
 		//       Then perform the operation using the memory
 		memory.writeWord(pageNo, offset, value);
 	}

@@ -54,6 +54,8 @@ public class ProcessControlBlock {
 		if (parent != null) {
 			this.program = parent.program;
 			this.registers = new Registers(parent.registers);
+			// TODO: clone the parents page table accordingly
+			
 		} else {
 			this.registers = new Registers();
 		}
@@ -75,7 +77,9 @@ public class ProcessControlBlock {
 			return false;
 		}
 		setRegistersFor(program);
-		// TODO: Create a page table with empty entries
+		// TODO: free current page table before creating the new one
+		
+		// TODO (previous lab): Create a page table with empty entries
 		//       The table should contain:
 		//        - one entry for the stack segment
 		//        - one entry for the extra segment

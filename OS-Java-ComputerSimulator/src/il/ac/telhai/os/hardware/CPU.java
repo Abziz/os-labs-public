@@ -54,20 +54,29 @@ public class CPU extends MMU implements Clockeable {
 		return ret;
 	}
 
+	private void handleInterrupt(InterruptSource source) {
+		InterruptHandler handler = getHandler(source);
+		if (handler != null) {
+			boolean oldFlag = registers.getFlag(Registers.FLAG_USER_MODE);
+			registers.setFlag(Registers.FLAG_USER_MODE, false);
+			try {
+		        handler.handle(source);
+			} catch (Trap trap) {
+				handleInterrupt (trap);
+			}
+			if (halted()) return;
+			registers.setFlag(Registers.FLAG_USER_MODE, oldFlag);
+		}		
+	}
 
 	@Override
 	public void tick() {
 		if (halted()) return;
 
 		if (pendingInterrupts.size() > 1) logger.trace("Multiple pending interrupts");
-		if (pendingInterrupts.size() != 0) {
-			InterruptSource source = pendingInterrupts.remove();
-			InterruptHandler handler = getHandler(source);
-			if (handler != null) {
-				registers.setFlag(Registers.FLAG_USER_MODE, false);
-				handler.handle(source);
-				if (halted()) return;
-			}
+		while (pendingInterrupts.size() != 0) {
+			handleInterrupt(pendingInterrupts.remove());
+			if (halted()) return;
 		}
 
 		if (running != null) {
@@ -81,9 +90,11 @@ public class CPU extends MMU implements Clockeable {
 					programLine.execute(registers, this);
 				} catch (SystemCall call) {
 					interrupt(call);
+				} catch (PageFault call) {
+					interrupt(call);
+					registers.add(Register.IP, -1);
 				} catch (Trap trap) {
 					interrupt(trap);
-					registers.add(Register.IP, -1);
 				}
 			}
 		}

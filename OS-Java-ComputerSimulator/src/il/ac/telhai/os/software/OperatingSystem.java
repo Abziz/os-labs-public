@@ -16,6 +16,7 @@ public class OperatingSystem implements Software {
 	private Timer timer;
 	private boolean initialized = false;
 	private Scheduler scheduler;
+	VMM vmm;
 
 
 
@@ -61,12 +62,15 @@ public class OperatingSystem implements Software {
 			}
 		}
 		cpu.setInterruptHandler(SystemCall.class, new SystemCallInterruptHandler());
-		cpu.setInterruptHandler(PageFault.class, new VMM(cpu));
+		vmm = new VMM(cpu);
+		cpu.setInterruptHandler(PageFault.class, vmm);
+		//TODO: register segmentation fault interrupt handler
 	}
 
 
 	private void shutdown() {
 		logger.info( "System going for shutdown");
+		vmm.shutdown();
 		cpu.execute(Instruction.create("HALT"));
 	}
 
@@ -85,6 +89,10 @@ public class OperatingSystem implements Software {
 			scheduler.schedule();
 		}
 	}
+	//TODO: Add Segmentation Fault Handler
+	//	- print this message when a segmantation fault happens:
+	//	  logger.info("Segmentation Fault PID = " + <PID>);
+	
 	
 	private class SystemCallInterruptHandler implements InterruptHandler {
 		@Override
