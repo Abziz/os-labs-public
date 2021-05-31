@@ -89,15 +89,25 @@ public class RealMemory implements Memory {
 	}
 
 	public String dump(int segment) {
-		// TODO: (not for students) Make it like od
 		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i< segmentSize; i+=BYTES_PER_INT) {
-			int value = this.readWord(segment, i);
-			if (value != 0) {
+		final int BYTES_PER_LINE = 16;
+		int linesPerSegment = segmentSize / BYTES_PER_LINE;
+		for (int line = 0; line < linesPerSegment; line++) {
+			int offset = line*BYTES_PER_LINE;
+			StringBuilder lineSB = new StringBuilder();
+			lineSB.append(String.format("%04d\t", offset));
+			int lineTotal = 0;
+			for (int i = 0; i < BYTES_PER_LINE; i++) {
+				byte value = readByte(segment, offset++);
+				lineTotal += value;
+				lineSB.append(String.format("%03d ", value));
+			}
+			if (lineTotal != 0) {
 				if (sb.length() == 0) {
 					sb.append("Dump of Segment:" + segment + "\n");					
 				}
-				sb.append(i + ":" + value + "\n");
+				sb.append(lineSB);
+				sb.append("\n");
 			}
 		}
 		return sb.toString();

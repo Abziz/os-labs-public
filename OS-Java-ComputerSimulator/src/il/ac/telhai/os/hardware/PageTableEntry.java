@@ -90,5 +90,21 @@ public class PageTableEntry {
 		value &= ~SEGMENT_MASK;
 		value |= (segmentNo & SEGMENT_MASK);
 	}
+	
+	public String toString() {
+		if (value == 0) return "EMPTY";
+		StringBuilder sb = new StringBuilder();
+		sb.append("M=");
+		sb.append(isMappedtoMemory() ? "1" : "0");
+		sb.append(" D=");
+		sb.append(isMappedtoDisc() ? "1" : "0");
+		sb.append(" C=");
+		sb.append(isCopyOnWrite() ? "1" : "0");
+		sb.append(" MOD=");
+		sb.append(isModified() ? "1" : "0");
+		sb.append(" ");
+		sb.append(getSegmentNo());
+		return sb.toString();
+	}
 
 }

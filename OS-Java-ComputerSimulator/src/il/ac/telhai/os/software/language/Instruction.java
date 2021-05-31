@@ -46,7 +46,7 @@ public class Instruction implements ProgramLine {
 	public void execute (Registers registers, Memory memory) {
 		int result;
 		
-		logger.info(this);
+		logger.trace(this);
 		
 		if (mnemonicCode.isPrivileged() && registers.getFlag(Registers.FLAG_USER_MODE)) {
 			throw new RuntimeException(this + ": cannot execute in user mode" + registers);
@@ -79,6 +79,18 @@ public class Instruction implements ProgramLine {
 			break;
 		case DEC: 
 			result = op1.getWord(registers, memory)-1;
+			op1.setWord(registers, memory, result);
+			break;
+		case AND: 
+			result = op1.getWord(registers, memory) & op2.getWord(registers, memory);
+			op1.setWord(registers, memory, result);
+			break;
+		case SHL: 
+			result = op1.getWord(registers, memory) << op2.getWord(registers, memory);
+			op1.setWord(registers, memory, result);
+			break;
+		case SHR: 
+			result = op1.getWord(registers, memory) >> op2.getWord(registers, memory);
 			op1.setWord(registers, memory, result);
 			break;
 		case NOP:

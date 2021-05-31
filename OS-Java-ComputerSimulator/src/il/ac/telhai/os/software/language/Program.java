@@ -24,7 +24,7 @@ public class Program implements Software {
 		Scanner sc = new Scanner( new FileReader(fileName));
 		while (sc.hasNext()) {
 			String s = sc.nextLine().trim();
-			if (!s.equals("")) { // Skip empty lines
+			if (!s.equals("") && !s.startsWith("//")) { // Skip empty lines
 				AssemblerLine line = new AssemblerLine(s, symbolTable);
 				switch (line.getMnemonic().getType()) {
 				case 1:  // Directives
@@ -52,11 +52,12 @@ public class Program implements Software {
 	 */
 	private Map<String, Integer> readSymbols(String fileName) throws FileNotFoundException, ParseException {
 		Map<String, Integer> symbolTable = new HashMap<String, Integer>();
+		@SuppressWarnings("resource")
 		Scanner sc = new Scanner( new FileReader(fileName));
 		int lineNo = 0;
 		while (sc.hasNext()) {
 			String s = sc.nextLine().trim();
-			if (!s.equals("")) { // Skip empty lines
+			if (!s.equals("") && !s.startsWith("//")) { // Skip empty lines and comment lines
 				AssemblerLine line = new AssemblerLine(s, null);
 				int value;
 				if (line.getMnemonic().getType() == 1) {
@@ -74,7 +75,12 @@ public class Program implements Software {
 				} else {
 					value = lineNo ++;
 				}
-				if (line.getLabel() != null) symbolTable.put(line.getLabel().toUpperCase(), value);
+				String label = line.getLabel();
+				if (label != null) {
+					label = label.toUpperCase();
+					if (symbolTable.containsKey(label)) throw new ParseException("Mulitiply defined symbol: " + line.getLabel(), 0);
+					symbolTable.put(label, value);
+				}
 			}
 		}
 		sc.close();

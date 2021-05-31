@@ -1,8 +1,5 @@
 package il.ac.telhai.os.software;
 
-import java.util.LinkedList;
-import java.util.Queue;
-
 import org.apache.log4j.Logger;
 
 import il.ac.telhai.os.hardware.InterruptSource;
@@ -15,51 +12,37 @@ public class VMM implements InterruptHandler {
 
 	private MMU mmu;
 	private int numberOfRealSegments;
-	private Queue<Integer> freeMemoryPages = null;
 
 	public VMM (MMU mmu) {
 		this.mmu = mmu;
 		numberOfRealSegments = mmu.getNumberOfSegments(); // This works since the mmu is initially in real mode
+		if (mmu.getSegmentSize() < numberOfRealSegments) {
+			throw new IllegalStateException("Free bitmap cannot be stored in one page");
+		}
 		initMemoryFreeList();
 	}
 
 	private void initMemoryFreeList() {
 		logger.info("Initializing Real Memory");
-		freeMemoryPages = new LinkedList<Integer>();
-		for (int i=1; i < this.numberOfRealSegments; i++) {
-			freeMemoryPages.add(i);
+		mmu.enterRealMode();
+		mmu.writeByte(0, 0, (byte) 1); // Page 0 is in use
+		for (int i=1; i< numberOfRealSegments; i++) {
+			mmu.writeByte(0, i, (byte) 0); 
 		}
+		mmu.exitRealMode();
 		logger.info("Real Memory Initialized");
 	}
 
 	private int getFreePage() {
-		int result = freeMemoryPages.remove();
-		logger.info("Allocating segment " + result);
-		return result;
+		//        		logger.trace("Allocating segment " + i);
 	}
-	
+
 	public PageTableEntry[] clonePageTable(PageTableEntry[] pageTable) {
-		PageTableEntry[] ret = new PageTableEntry[pageTable.length];
-		for (int i = 0; i < pageTable.length; i++) {
-			ret[i] = new PageTableEntry(pageTable[i]);
-			if (ret[i].isMappedtoMemory() || ret[i].isMappedtoDisc()) {
-				ret[i].setCopyOnWrite(true);			
-				pageTable[i].setCopyOnWrite(true);
-			}
-		}
-		return ret;
+		//        		logger.trace("Sharing segment " + ret[i].getSegmentNo() + ", refcnt=" + (refCount+1));
 	}
-	
+
 	public void releasePageTable (PageTableEntry[] pageTable) {
-		// TODO: (not for students) What happens if parent exits before children?
-		//       Shared pages should not be released. 
-		for (int i=0; i<pageTable.length; i++) {
-            PageTableEntry e = pageTable[i];
-            pageTable[i] = null;
-			if (e.isMappedtoMemory() && !e.isCopyOnWrite()) {
-				freeMemoryPages.add(e.getSegmentNo());
-			}
-		}
+		//				logger.trace("Releasing segment " + e.getSegmentNo() + " ,refcnt=" + (refCount-1));
 	}
 
 
@@ -67,22 +50,27 @@ public class VMM implements InterruptHandler {
 	public void handle(InterruptSource source) {
 		PageFault fault = (PageFault) source;
 		PageTableEntry entry = fault.getEntry();
-		if (entry == null) {
-			throw new SegmentationViolation();
-		}
+		assert(entry != null);
 		if (entry.isMappedtoMemory()) {
-			int newPage = getFreePage();
-			mmu.copySegment(newPage, entry.getSegmentNo());
-			entry.setSegmentNo(newPage);
+			int newSegment = getFreePage();  // Recall that getFreePage exits realMode
+			logger.trace("Copying segment " + entry.getSegmentNo() + " to segment " + newSegment);
+			mmu.copySegment(newSegment, entry.getSegmentNo());
+			entry.setSegmentNo(newSegment);				
 			entry.setCopyOnWrite(false);
 		} else {
 			entry.setSegmentNo(getFreePage());
 			entry.setMappedToMemory(true);			
 		}
 	}
-	
+
 	void shutdown( ) {
-		logger.info("Free Memory: " + freeMemoryPages.size() + " pages.");
+		mmu.enterRealMode();
+		int numberOfFreePages = 0;
+		for (int i=1; i<numberOfRealSegments; i++) {
+			if (mmu.readByte(0, i) == 0) numberOfFreePages++;
+		}
+		mmu.exitRealMode();
+		logger.info("Free Memory: " + numberOfFreePages + " pages.");
 	}
 
 }

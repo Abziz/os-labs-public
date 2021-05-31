@@ -167,10 +167,23 @@ public class ProcessControlBlock {
 	public static ProcessControlBlock getProcess(int id) {
 		return idMap.get(id);
 	}
+	
+	public static void shutdown() {
+		logger.info("Active Processes");
+		for (ProcessControlBlock p : idMap.values()) {
+			logger.info(p);
+			logger.trace("Page Table");
+			for (PageTableEntry e : p.pageTable) {
+				logger.trace(e);
+			}
+			logger.trace("");
+		}
+	}
 
 	@Override
 	public String toString() {
-		return "Process [id=" + id + ", program=" + program.getFileName() + "]";
+		String parentStr = (parent == null) ? "" : ",parent = " + parent.id; 
+		return "Process [id=" + id + parentStr +  ", program=" + program.getFileName() + "]";
 	}
 	
 

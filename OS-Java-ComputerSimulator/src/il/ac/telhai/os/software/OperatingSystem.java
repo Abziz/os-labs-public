@@ -70,6 +70,7 @@ public class OperatingSystem implements Software {
 
 	private void shutdown() {
 		logger.info( "System going for shutdown");
+		ProcessControlBlock.shutdown();
 		vmm.shutdown();
 		cpu.execute(Instruction.create("HALT"));
 	}

@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 
 import il.ac.telhai.os.hardware.Memory;
 import il.ac.telhai.os.hardware.RealMemory;
+import il.ac.telhai.os.software.SegmentationViolation;
 
 /**
  * 
@@ -17,6 +18,7 @@ public class MMU implements Memory {
 	private static final Logger logger = Logger.getLogger(MMU.class);
 
 	private RealMemory memory;
+	private PageTableEntry[] oldPageTable;
 	private PageTableEntry[] pageTable=null; 
 
 	public MMU (RealMemory memory, int numberOfPages) {
@@ -26,10 +28,23 @@ public class MMU implements Memory {
 		this.memory = memory;
 	}
 
-	public void setRealMode () {
-		pageTable = null;		
+	/**
+	 * Note that it is idempotent
+	 */
+	public void enterRealMode () {
+		if (pageTable != null) {
+			oldPageTable = pageTable;
+			pageTable = null;					
+		}
 	}
-	
+
+	/**
+	 * Note that it is idempotent
+	 */
+	public void exitRealMode () {
+		pageTable = oldPageTable;		
+	}
+
 	public void setPageTable (PageTableEntry[] pageTable) {
 		this.pageTable = pageTable; 		
 	}
@@ -55,7 +70,8 @@ public class MMU implements Memory {
 	private int xlateSegmentNo(int pageNo, boolean isAWrite) {
 		if (pageTable == null) return pageNo;
 		PageTableEntry entry = (pageNo >= 0 && pageNo < pageTable.length) ? pageTable[pageNo] : null;
-		if (entry == null || !entry.isMappedtoMemory()) throw new PageFault(entry);
+		if (entry == null) throw new SegmentationViolation();
+		if (!entry.isMappedtoMemory()) throw new PageFault(entry);
 		if (entry.isCopyOnWrite() && isAWrite) throw new PageFault(entry);
 		return entry.getSegmentNo();
 	}
