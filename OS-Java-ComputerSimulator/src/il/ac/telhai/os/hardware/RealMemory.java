@@ -89,6 +89,7 @@ public class RealMemory implements Memory {
 	}
 
 	public String dump(int segment) {
+		// TODO: (not for students) Make it like od
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i< segmentSize; i+=BYTES_PER_INT) {
 			int value = this.readWord(segment, i);

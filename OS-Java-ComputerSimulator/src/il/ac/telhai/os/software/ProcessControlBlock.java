@@ -54,8 +54,7 @@ public class ProcessControlBlock {
 		if (parent != null) {
 			this.program = parent.program;
 			this.registers = new Registers(parent.registers);
-			// TODO: clone the parents page table accordingly
-			
+			this.pageTable = OperatingSystem.getInstance().vmm.clonePageTable(parent.pageTable);			
 		} else {
 			this.registers = new Registers();
 		}
@@ -69,7 +68,22 @@ public class ProcessControlBlock {
 		registers.set(Register.IP, program.getEntryPoint());
 	}
 
+	private void setPageTableFor(Program program) {
+        // Create a page table with 1 + program.getDataSegments() segments
+		// none of which is mapped
+		// Segment zero is the stack segment (see register settings above)
+		pageTable = new PageTableEntry[program.getDataSegments()+2];
+		for (int i = 0; i < pageTable.length; i++) {
+			pageTable[i] = new PageTableEntry();
+		}
+	}
+
+
+	
 	public boolean exec(String fileName) {
+		if (pageTable != null) {
+		    OperatingSystem.getInstance().vmm.releasePageTable (pageTable);
+		}
 		try {
 			this.program = new Program(fileName);
 		} catch (FileNotFoundException | ParseException e) {
@@ -77,14 +91,7 @@ public class ProcessControlBlock {
 			return false;
 		}
 		setRegistersFor(program);
-		// TODO: free current page table before creating the new one
-		
-		// TODO (previous lab): Create a page table with empty entries
-		//       The table should contain:
-		//        - one entry for the stack segment
-		//        - one entry for the extra segment
-		//        - as many data segments as needed (program.getDataSegments())
-
+		setPageTableFor(program);
 		return true;
 	}
 
@@ -98,6 +105,10 @@ public class ProcessControlBlock {
    		parent.children.remove(this);
 
 		idMap.remove(id);
+		
+		OperatingSystem.getInstance().vmm.releasePageTable (pageTable);
+		pageTable = null;
+
 
 	}
 
@@ -110,9 +121,10 @@ public class ProcessControlBlock {
 	}
 
 	public void run(CPU cpu) {
+		// TODO: (not for students) The parameter cpu is currently unused. 
+		// It is useless if cpu will remain a static variable of Operating System	
 		cpu.contextSwitch(program, registers);
-		//TODO: set the page table of the cpu to match the current process page table
-		
+		cpu.setPageTable(pageTable);
 		registers.setFlag(Registers.FLAG_USER_MODE, true);
 	}
 	
@@ -125,14 +137,17 @@ public class ProcessControlBlock {
 	}
 
 	public int getWord(Operand op) {
+		// TODO (not for students): Use this with caution, it does not handle page faults
 		return op.getWord(registers, OperatingSystem.getInstance().cpu);
 	}
 
 	public int getByte(Operand op) {
+		// TODO (not for students): Use this with caution, it does not handle page faults
 		return op.getByte(registers, OperatingSystem.getInstance().cpu);
 	}
 	
 	public String getString(Operand op) {
+		// TODO (not for students): Use this with caution, it does not handle page faults
 			return op.getString(registers, OperatingSystem.getInstance().cpu);
 	}
 

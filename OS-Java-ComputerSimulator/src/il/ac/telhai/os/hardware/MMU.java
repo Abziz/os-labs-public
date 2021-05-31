@@ -2,6 +2,9 @@ package il.ac.telhai.os.hardware;
 
 import org.apache.log4j.Logger;
 
+import il.ac.telhai.os.hardware.Memory;
+import il.ac.telhai.os.hardware.RealMemory;
+
 /**
  * 
  * @author cmshalom
@@ -44,46 +47,41 @@ public class MMU implements Memory {
 	public int getNumberOfSegments() {
 		return pageTable == null ? memory.getNumberOfSegments() : pageTable.length;
 	}
-
+	
 	public void copySegment(int destinationSegment, int sourceSegment) {
 		memory.dma(destinationSegment, sourceSegment);
 	}
 	
-	int translateSegment(int pageNo,boolean isWrite) {
-		// TODO: translate pageNo according to pageTable (if exists)
-		// a page fault should be raised if:
-		// 	 - the entry is not mapped to memory (previous lab)
-		// 	 - the entry doesn't exist
-		// 	 - the entry exists, CopyOnWrite bit is set and its a write to memory
-		return 0;
+	private int xlateSegmentNo(int pageNo, boolean isAWrite) {
+		if (pageTable == null) return pageNo;
+		PageTableEntry entry = (pageNo >= 0 && pageNo < pageTable.length) ? pageTable[pageNo] : null;
+		if (entry == null || !entry.isMappedtoMemory()) throw new PageFault(entry);
+		if (entry.isCopyOnWrite() && isAWrite) throw new PageFault(entry);
+		return entry.getSegmentNo();
 	}
 	
 	@Override
 	public byte readByte(int pageNo, int offset) {
-		// TODO (previous lab): Translate the pageNumber according to pageTable (if it exists),
-		//       Then perform the operation using the memory
-		return memory.readByte(pageNo, offset);
+		int segmentNo = xlateSegmentNo(pageNo, false);
+		return memory.readByte(segmentNo, offset);
 	}
 
 	@Override
 	public void writeByte(int pageNo, int offset, byte value) {
-		// TODO (previous lab): Translate the pageNumber according to pageTable (if it exists),
-		//       Then perform the operation using the memory
-		memory.writeByte(pageNo, offset, value);
+		int segmentNo = xlateSegmentNo(pageNo, true);
+		memory.writeByte(segmentNo, offset, value);
 	}
 
 	@Override
 	public int readWord(int pageNo, int offset) {
-		// TODO (previous lab): Translate the pageNumber according to pageTable (if it exists),
-		//       Then perform the operation using the memory
-		return memory.readWord(pageNo, offset);
+		int segmentNo = xlateSegmentNo(pageNo, false);
+		return memory.readWord(segmentNo, offset);			
 	}
 
 	@Override
 	public void writeWord(int pageNo, int offset, int value) {
-		// TODO (previous lab): Translate the pageNumber according to pageTable (if it exists),
-		//       Then perform the operation using the memory
-		memory.writeWord(pageNo, offset, value);
+		int segmentNo = xlateSegmentNo(pageNo, true);
+		memory.writeWord(segmentNo, offset, value);
 	}
-
+	
 }

@@ -64,7 +64,7 @@ public class OperatingSystem implements Software {
 		cpu.setInterruptHandler(SystemCall.class, new SystemCallInterruptHandler());
 		vmm = new VMM(cpu);
 		cpu.setInterruptHandler(PageFault.class, vmm);
-		//TODO: register segmentation fault interrupt handler
+		cpu.setInterruptHandler(SegmentationViolation.class, new SegmentationFaultHandler());
 	}
 
 
@@ -89,11 +89,17 @@ public class OperatingSystem implements Software {
 			scheduler.schedule();
 		}
 	}
-	//TODO: Add Segmentation Fault Handler
-	//	- print this message when a segmantation fault happens:
-	//	  logger.info("Segmentation Fault PID = " + <PID>);
-	
-	
+
+	private class SegmentationFaultHandler implements InterruptHandler {
+		@Override
+		public void handle(InterruptSource source) {
+			ProcessControlBlock current = scheduler.removeCurrent();
+			logger.info("Segmentation Fault in process:" + current.getId());
+			current.exit(256);
+			scheduler.schedule();
+		}
+	}
+
 	private class SystemCallInterruptHandler implements InterruptHandler {
 		@Override
 		public void handle(InterruptSource source) {
