@@ -18,9 +18,7 @@ public class OperatingSystem implements Software {
 	private Scheduler scheduler;
 	VMM vmm;
 
-
-
-	public OperatingSystem (CPU cpu, Set<Peripheral> peripherals) {
+	public OperatingSystem(CPU cpu, Set<Peripheral> peripherals) {
 		if (instance != null) {
 			throw new IllegalStateException("Operating System is a singleton");
 		}
@@ -40,18 +38,18 @@ public class OperatingSystem implements Software {
 			scheduler.schedule();
 		}
 	}
-		
+
 	private void initialize() {
 		installHandlers();
 		ProcessControlBlock init = new ProcessControlBlock(null);
 		if (!init.exec("init.prg")) {
-			throw new IllegalArgumentException ("Cannot load init");
+			throw new IllegalArgumentException("Cannot load init");
 		}
 		scheduler = new RoundRobinScheduler(cpu, init, timer);
 		scheduler.schedule();
 		initialized = true;
-	}	
-	
+	}
+
 	private void installHandlers() {
 		for (Peripheral p : peripherals) {
 			if (p instanceof PowerSwitch) {
@@ -67,9 +65,8 @@ public class OperatingSystem implements Software {
 		cpu.setInterruptHandler(SegmentationViolation.class, new SegmentationFaultHandler());
 	}
 
-
 	private void shutdown() {
-		logger.info( "System going for shutdown");
+		logger.info("System going for shutdown");
 		ProcessControlBlock.shutdown();
 		vmm.shutdown();
 		cpu.execute(Instruction.create("HALT"));
@@ -81,7 +78,7 @@ public class OperatingSystem implements Software {
 			shutdown();
 		}
 	}
-	
+
 	private class TimerInterruptHandler implements InterruptHandler {
 		@Override
 		public void handle(InterruptSource source) {
@@ -144,7 +141,8 @@ public class OperatingSystem implements Software {
 			case LOG:
 				logger.info(current.getString(op1));
 				current.run(cpu);
-                break;
+				break;
+			// TODO: insert additional system calls
 			default:
 				throw new IllegalArgumentException("Unknown System Call:" + call);
 			}

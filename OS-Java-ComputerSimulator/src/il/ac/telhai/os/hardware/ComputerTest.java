@@ -16,21 +16,19 @@ public class ComputerTest extends Computer {
 		c.run();
 		assertEquals(		
 				"\nCS=0	DS=1	SS=0	ES=2" +
-				"\nAX=0	BX=0	CX=0	DX=1" +
-				"\nSP=204	IP=48	SI=0	DI=0" +
+				"\nAX=0	BX=0	CX=0	DX=0" +
+				"\nSP=204	IP=18	SI=0	DI=0" +
 				"\nBP=0	FL=2\t", c.cpu.getRegisters());
 		assertEquals(1, ProcessControlBlock.getProcess(1).getId());
 		assertNull(ProcessControlBlock.getProcess(2));
-		assertNull(ProcessControlBlock.getProcess(3));
-		assertNull(ProcessControlBlock.getProcess(4));
 		assertNull(ProcessControlBlock.getProcess(5));
-		assertEquals(1, ProcessControlBlock.getProcess(11).getParent().getId());
-		assertEquals(1, ProcessControlBlock.getProcess(18).getParent().getId());
-		assertEquals(1, ProcessControlBlock.getProcess(19).getParent().getId());
-		assertEquals(1, ProcessControlBlock.getProcess(22).getParent().getId());
-		assertEquals(1, ProcessControlBlock.getProcess(23).getParent().getId());
-		assertEquals(1, ProcessControlBlock.getProcess(28).getParent().getId());
-		assertEquals(1, ProcessControlBlock.getProcess(29).getParent().getId());
+		assertNull(ProcessControlBlock.getProcess(6));
+		assertEquals(3, ProcessControlBlock.getProcess(3).getId());
+		assertEquals(4, ProcessControlBlock.getProcess(4).getId());
+		assertEquals(7, ProcessControlBlock.getProcess(7).getId());
+		assertEquals(1, ProcessControlBlock.getProcess(3).getParent().getId());
+		assertEquals(1, ProcessControlBlock.getProcess(4).getParent().getId());
+		assertEquals(1, ProcessControlBlock.getProcess(7).getParent().getId());
 	}
 
 }

@@ -67,9 +67,6 @@ public class VMM implements InterruptHandler {
 	}
 	
 	public void releasePageTable (PageTableEntry[] pageTable) {
-		// TODO: What happens if parent exits before children?
-		//       or parent wants to write 
-		//       Shared pages should not be released. 
 		mmu.enterRealMode();
 		for (int i=0; i<pageTable.length; i++) {
             PageTableEntry e = pageTable[i];

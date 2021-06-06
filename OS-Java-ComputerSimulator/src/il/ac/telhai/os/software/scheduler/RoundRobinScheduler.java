@@ -47,6 +47,7 @@ public class RoundRobinScheduler extends Scheduler {
 	public void schedule() {
 		logger.trace("schedule(): " + this);
 		ProcessControlBlock previouslyRunning = current;
+		while(readyProcesses.peek().isTerminated()) readyProcesses.remove();
 		current = readyProcesses.peek();
 		if (current != null) {
 			timer.setAlarm(TIME_SLOT_SIZE);
