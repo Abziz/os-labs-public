@@ -43,7 +43,6 @@ public class Timer extends Peripheral {
 	 */
 
 	public void setAlarm(long time) {
-		// TODO: (not for students) Handle Overflow of time
 		countDownTimer = time - this.time;
 	}
 
